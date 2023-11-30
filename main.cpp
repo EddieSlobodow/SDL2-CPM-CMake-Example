@@ -111,6 +111,11 @@ int main(int argc, char* argv[]) {
     squareRect.x = width / 2 - squareRect.w / 2;
     squareRect.y = height / 2 - squareRect.h / 2;
 
+    // load the imgs here
+
+    SDL_Surface* whitePawnSrf = IMG_Load("Chess_plt60.png");
+    SDL_Texture* whitePawnTxt = SDL_CreateTextureFromSurface(renderer, whitePawnSrf);
+
     // Event loop
     while (!done) {
         // Poll and handle events (inputs, window resize, etc.)
@@ -184,8 +189,22 @@ int main(int argc, char* argv[]) {
         // Draw filled square
         SDL_RenderFillRect(renderer, &squareRect);
 
+
+
+
         // present ui on top of your drawings
         ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+
+        int height, width;
+        SDL_GetWindowSize(window,  &width, &height);
+
+        int size = height/8;
+        for(int row = 0; row < 8; row++){
+            for (int collum = 0; collum < 8; collum++){
+                SDL_Rect r = {collum*size,row*size,size,size};
+                SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+            }
+        }
         SDL_RenderPresent(renderer);
 
         SDL_Delay(0);

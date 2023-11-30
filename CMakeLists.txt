@@ -9,20 +9,10 @@ endif(COMMAND cmake_policy)
 project(MyProject)
 
 # set where the compiled files goes
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/libs)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/libs)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/libs)
-
-# emscripten settings
-IF(DEFINED EMSCRIPTEN)
-    message(STATUS "emscripten build")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Oz -s WASM=2 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s ASYNCIFY -s FULL_ES2=1 -s USE_GLFW=3")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Oz -s WASM=2 -s USE_SDL=2 -s USE_SDL_IMAGE=2 -s ASYNCIFY -s FULL_ES2=1 -s USE_GLFW=3")
-
-    file(GLOB HTML "${CMAKE_CURRENT_SOURCE_DIR}/html/*")
-    file(COPY ${HTML} DESTINATION ${CMAKE_BINARY_DIR}/bin/)
-ENDIF()
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+LINK_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 # add dependencies
 include(external/compilerchecks.cmake)
@@ -45,3 +35,6 @@ ELSE()
     target_link_libraries(demo  PUBLIC SDL2-static SDL2_image IMGUI)
     target_link_libraries(demo2 PUBLIC SDL2-static ${OPENGL_gl_LIBRARY} ${CMAKE_DL_LIBS} SDL2_image IMGUI glew)
 ENDIF()
+
+file(GLOB IMGS ${PROJECT_SOURCE_DIR}/*.png)
+file(COPY ${IMGS} DESTINATION ${CMAKE_BINARY_DIR})
