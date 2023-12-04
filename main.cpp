@@ -1,7 +1,7 @@
 #define SDL_MAIN_HANDLED true
 #include <iostream>
 #include <algorithm>
-
+#include <string>
 #include <SDL.h>
 #include <SDL_image.h>
 //#include <SDL_mixer.h>
@@ -23,6 +23,7 @@ EM_JS(int, canvas_get_height, (), {
 return canvas.height;
 });
 #endif
+
 
 int main(int argc, char* argv[]) {
     // Unused argc, argv
@@ -115,6 +116,32 @@ int main(int argc, char* argv[]) {
 
     SDL_Surface* whitePawnSrf = IMG_Load("Chess_plt60.png");
     SDL_Texture* whitePawnTxt = SDL_CreateTextureFromSurface(renderer, whitePawnSrf);
+    SDL_Surface* blackPawnSrf = IMG_Load("Chess_pdt60.png");
+    SDL_Texture* blackPawnTxt = SDL_CreateTextureFromSurface(renderer, blackPawnSrf);
+    SDL_Surface* whiteRookSrf = IMG_Load("Chess_rlt60.png");
+    SDL_Texture* whiteRookTxt = SDL_CreateTextureFromSurface(renderer, whiteRookSrf);
+    SDL_Surface* blackRookSrf = IMG_Load("Chess_rdt60.png");
+    SDL_Texture* blackRookTxt = SDL_CreateTextureFromSurface(renderer, blackRookSrf);
+    SDL_Surface* whiteKnightSrf = IMG_Load("Chess_nlt60.png");
+    SDL_Texture* whiteKnightTxt = SDL_CreateTextureFromSurface(renderer, whiteKnightSrf);
+    SDL_Surface* blackKnightSrf = IMG_Load("Chess_ndt60.png");
+    SDL_Texture* blackKnightTxt = SDL_CreateTextureFromSurface(renderer, blackKnightSrf);
+    SDL_Surface* whiteBishopSrf = IMG_Load("Chess_blt60.png");
+    SDL_Texture* whiteBishopTxt = SDL_CreateTextureFromSurface(renderer, whiteBishopSrf);
+    SDL_Surface* blackBishopSrf = IMG_Load("Chess_bdt60.png");
+    SDL_Texture* blackBishopTxt = SDL_CreateTextureFromSurface(renderer, blackBishopSrf);
+    SDL_Surface* whiteQueenSrf = IMG_Load("Chess_qlt60.png");
+    SDL_Texture* whiteQueenTxt = SDL_CreateTextureFromSurface(renderer, whiteQueenSrf);
+    SDL_Surface* blackQueenSrf = IMG_Load("Chess_qdt60.png");
+    SDL_Texture* blackQueenTxt = SDL_CreateTextureFromSurface(renderer, blackQueenSrf);
+    SDL_Surface* whiteKingSrf = IMG_Load("Chess_klt60.png");
+    SDL_Texture* whiteKingTxt = SDL_CreateTextureFromSurface(renderer, whiteKingSrf);
+    SDL_Surface* blackKingSrf = IMG_Load("Chess_kdt60.png");
+    SDL_Texture* blackKingTxt = SDL_CreateTextureFromSurface(renderer, blackKingSrf);
+
+    std::string input;
+    bool newInput = false;
+
 
     // Event loop
     while (!done) {
@@ -146,21 +173,23 @@ int main(int argc, char* argv[]) {
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
             static float f = 0.0f;
-            static int counter = 0;
 
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            static char textBuffer[256] = "Hello, ImGui!";
+            bool enterPressed = ImGui::InputText("Enter Text", textBuffer, sizeof(textBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
 
+            if (enterPressed) {
+                // Do something when Enter is pressed
+                printf("Enter pressed! Text: %s\n", textBuffer);
+                input = textBuffer;
+                newInput = true;
+                textBuffer[0] = '\0';
+                // Here, you can store the textBuffer in a variable or perform any other actions.
+            }
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            //ImGui::SameLine();
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
@@ -184,13 +213,6 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
 
         // todo: add your game logic here to be drawn before the ui rendering
-        // Set renderer color red to draw the square
-        SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-        // Draw filled square
-        SDL_RenderFillRect(renderer, &squareRect);
-
-
-
 
         // present ui on top of your drawings
         ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
@@ -199,11 +221,26 @@ int main(int argc, char* argv[]) {
         SDL_GetWindowSize(window,  &width, &height);
 
         int size = height/8;
+        int counter = 0;
+        if (newInput){
+            counter++;
+            newInput = false;
+        }
         for(int row = 0; row < 8; row++){
             for (int collum = 0; collum < 8; collum++){
                 SDL_Rect r = {collum*size,row*size,size,size};
+                if (counter % 2 == 0) SDL_SetRenderDrawColor(renderer, 247, 235, 190, 0xFF);
+                else SDL_SetRenderDrawColor(renderer, 171, 125, 79, 0xFF);
+                SDL_RenderFillRect(renderer, &r);
+
+                if (row < 4)
                 SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+                else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
+
+
+                counter++;
             }
+            counter++;
         }
         SDL_RenderPresent(renderer);
 
