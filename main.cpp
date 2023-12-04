@@ -2,6 +2,9 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <sstream>
+#include "ChessCLI.h"
+using namespace std;
 #include <SDL.h>
 #include <SDL_image.h>
 //#include <SDL_mixer.h>
@@ -139,8 +142,13 @@ int main(int argc, char* argv[]) {
     SDL_Surface* blackKingSrf = IMG_Load("Chess_kdt60.png");
     SDL_Texture* blackKingTxt = SDL_CreateTextureFromSurface(renderer, blackKingSrf);
 
-    std::string input;
+    std::string notation;
     bool newInput = false;
+
+    Game game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
+    //Game game(FEN("r2qk2r/8/8/8/8/8/8/R2QK2R"));
+
+    Teams tomove = Teams::WHITE;
 
 
     // Event loop
@@ -181,12 +189,14 @@ int main(int argc, char* argv[]) {
             if (enterPressed) {
                 // Do something when Enter is pressed
                 printf("Enter pressed! Text: %s\n", textBuffer);
-                input = textBuffer;
+                notation = textBuffer;
                 newInput = true;
                 textBuffer[0] = '\0';
                 // Here, you can store the textBuffer in a variable or perform any other actions.
             }
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+
+            if (tomove == Teams::WHITE) ImGui::Text("White to move");
+            else ImGui::Text("Black to move");  // Display some text (you can use a format strings too)
 
 
             //ImGui::SameLine();
@@ -223,25 +233,63 @@ int main(int argc, char* argv[]) {
         int size = height/8;
         int counter = 0;
         if (newInput){
-            counter++;
+            if (game.AttemptMoves(interpretMove(game.getTeamPieces(tomove), discoverMove(notation), tomove), tomove))
+            {
+                if (tomove == Teams::WHITE) tomove = Teams::BLACK;
+                else tomove = Teams::WHITE;
+            }
             newInput = false;
         }
-        for(int row = 0; row < 8; row++){
+        int boardSize = 8;
+        for(int row = 0; row < boardSize; row++){
             for (int collum = 0; collum < 8; collum++){
-                SDL_Rect r = {collum*size,row*size,size,size};
+                SDL_Rect r = {collum*size,(7-row)*size,size,size};
                 if (counter % 2 == 0) SDL_SetRenderDrawColor(renderer, 247, 235, 190, 0xFF);
                 else SDL_SetRenderDrawColor(renderer, 171, 125, 79, 0xFF);
                 SDL_RenderFillRect(renderer, &r);
 
-                if (row < 4)
-                SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
-                else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
+                char squareOut;
+                Square square = {collum, row};
+
+                switch (game.getPieceType(square)) {
+                    case PieceType::PAWN:
+                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+                        else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
+                        break;
+                    case PieceType::ROOK:
+                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteRookTxt, NULL, &r);
+                        else SDL_RenderCopy(renderer, blackRookTxt, NULL, &r);
+                        break;
+                    case PieceType::KNIGHT:
+                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKnightTxt, NULL, &r);
+                        else SDL_RenderCopy(renderer, blackKnightTxt, NULL, &r);
+                        break;
+                    case PieceType::BISHOP:
+                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteBishopTxt, NULL, &r);
+                        else SDL_RenderCopy(renderer, blackBishopTxt, NULL, &r);
+                        break;
+                    case PieceType::KING:
+                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKingTxt, NULL, &r);
+                        else SDL_RenderCopy(renderer, blackKingTxt, NULL, &r);
+                        break;
+                    case PieceType::QUEEN:
+                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteQueenTxt, NULL, &r);
+                        else SDL_RenderCopy(renderer, blackQueenTxt, NULL, &r);
+                        break;
+                    default: SDL_RenderCopy(renderer, NULL, NULL, &r);
+                }
+
+                //if (row < 4)
+                //SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+                //else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
 
 
                 counter++;
             }
             counter++;
         }
+
+
         SDL_RenderPresent(renderer);
 
         SDL_Delay(0);
