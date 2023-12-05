@@ -38,8 +38,8 @@ AlgebraicMove discoverMove(std::string in) {
 
     if (ret.moveType.captures == true) {
         if (n > 3) {
-            x = in[2];
-            y = in[3];
+            x = in[3];
+            y = in[4];
         }
     }
     else {

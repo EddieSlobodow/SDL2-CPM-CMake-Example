@@ -9,13 +9,14 @@ enum class PieceType {
 };
 
 enum Teams {
+    ALL = -2,
     NONE = -1,
     WHITE = 0,
     BLACK = 1,
 };
 
 struct MoveType {
-    bool captures = false, checks = false, promotes = false, castles = false, castleDir = false; // castleDir: 0 = short 1 = long
+    bool captures = false, checks = false, promotes = false, castles = false, castleDir = false, enPassant = false; // castleDir: 0 = short 1 = long
 
     bool operator==(const MoveType& other) const {
         return
@@ -91,6 +92,7 @@ namespace std {
 
 struct Move {
     Square from = { 0, 0 }, to = { 0, 0 }; // this is all you need for a completely unique move
+    PieceType promotion = PieceType::NONE;
 
     bool operator==(const Move& other) const {
         return (from == other.from) && (to == other.to);
@@ -103,6 +105,7 @@ struct AlgebraicMove {
     Square to;
     MoveType moveType;
     PieceType pieceType;
+    PieceType promotion;
 };
 
 struct CompleteMove {
