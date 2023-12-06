@@ -2,7 +2,6 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
-#include <sstream>
 #include "ChessCLI.h"
 using namespace std;
 #include <SDL.h>
@@ -12,7 +11,7 @@ using namespace std;
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 #include "imgui_impl_sdlrenderer.h"
-
+#include <fstream>
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
@@ -116,7 +115,7 @@ int main(int argc, char* argv[]) {
     squareRect.y = height / 2 - squareRect.h / 2;
 
     // load the imgs here
-
+    // the great wall
     SDL_Surface* whitePawnSrf = IMG_Load("Chess_plt60.png");
     SDL_Texture* whitePawnTxt = SDL_CreateTextureFromSurface(renderer, whitePawnSrf);
     SDL_Surface* blackPawnSrf = IMG_Load("Chess_pdt60.png");
@@ -141,11 +140,46 @@ int main(int argc, char* argv[]) {
     SDL_Texture* whiteKingTxt = SDL_CreateTextureFromSurface(renderer, whiteKingSrf);
     SDL_Surface* blackKingSrf = IMG_Load("Chess_kdt60.png");
     SDL_Texture* blackKingTxt = SDL_CreateTextureFromSurface(renderer, blackKingSrf);
+    SDL_Surface* aSrf = IMG_Load("a.png");
+    SDL_Texture* aTxt = SDL_CreateTextureFromSurface(renderer, aSrf);
+    SDL_Surface* bSrf = IMG_Load("b.png");
+    SDL_Texture* bTxt = SDL_CreateTextureFromSurface(renderer, bSrf);
+    SDL_Surface* cSrf = IMG_Load("c.png");
+    SDL_Texture* cTxt = SDL_CreateTextureFromSurface(renderer, cSrf);
+    SDL_Surface* dSrf = IMG_Load("d.png");
+    SDL_Texture* dTxt = SDL_CreateTextureFromSurface(renderer, dSrf);
+    SDL_Surface* eSrf = IMG_Load("e.png");
+    SDL_Texture* eTxt = SDL_CreateTextureFromSurface(renderer, eSrf);
+    SDL_Surface* fSrf = IMG_Load("f.png");
+    SDL_Texture* fTxt = SDL_CreateTextureFromSurface(renderer, fSrf);
+    SDL_Surface* gSrf = IMG_Load("g.png");
+    SDL_Texture* gTxt = SDL_CreateTextureFromSurface(renderer, gSrf);
+    SDL_Surface* hSrf = IMG_Load("h.png");
+    SDL_Texture* hTxt = SDL_CreateTextureFromSurface(renderer, hSrf);
+    SDL_Surface* oneSrf = IMG_Load("1.png");
+    SDL_Texture* oneTxt = SDL_CreateTextureFromSurface(renderer, oneSrf);
+    SDL_Surface* twoSrf = IMG_Load("2.png");
+    SDL_Texture* twoTxt = SDL_CreateTextureFromSurface(renderer, twoSrf);
+    SDL_Surface* threeSrf = IMG_Load("3.png");
+    SDL_Texture* threeTxt = SDL_CreateTextureFromSurface(renderer, threeSrf);
+    SDL_Surface* fourSrf = IMG_Load("4.png");
+    SDL_Texture* fourTxt = SDL_CreateTextureFromSurface(renderer, fourSrf);
+    SDL_Surface* fiveSrf = IMG_Load("5.png");
+    SDL_Texture* fiveTxt = SDL_CreateTextureFromSurface(renderer, fiveSrf);
+    SDL_Surface* sixSrf = IMG_Load("6.png");
+    SDL_Texture* sixTxt = SDL_CreateTextureFromSurface(renderer, sixSrf);
+    SDL_Surface* sevenSrf = IMG_Load("7.png");
+    SDL_Texture* sevenTxt = SDL_CreateTextureFromSurface(renderer, sevenSrf);
+    SDL_Surface* eightSrf = IMG_Load("8.png");
+    SDL_Texture* eightTxt = SDL_CreateTextureFromSurface(renderer, eightSrf);
 
     std::string notation;
     bool newInput = false;
     bool invalidMove = false;
     bool resetBoard = false;
+    int rowCounter = 0;
+    ofstream gameLog("C:\\repos\\SDL2-CPM-CMake-Example\\gamelog.txt");
+    if (!gameLog.is_open()) std::cerr << "Error opening the file" << std::endl;
 
     Game game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
     Teams winner = Teams::NONE;
@@ -239,26 +273,77 @@ int main(int argc, char* argv[]) {
             int height, width;
             SDL_GetWindowSize(window, &width, &height);
 
-            int size = height / 8;
+            int size = height / 9;
             int counter = 0;
+
             if (newInput) {
                 if (game.AttemptMoves(interpretMove(game.getTeamPieces(tomove), discoverMove(notation), tomove),
                                       tomove)) {
                     if (tomove == Teams::WHITE) tomove = Teams::BLACK;
                     else tomove = Teams::WHITE;
                     invalidMove = false;
-                } else invalidMove = true;
+                    gameLog << notation << "  ";
+                    rowCounter++;
+                    if (rowCounter % 8 == 0) gameLog << endl;
+                } else {
+                    invalidMove = true;
+                }
             }
-            int boardSize = 8;
+            int boardSize = 9;
+
+            //printboard
             for (int row = 0; row < boardSize; row++) {
-                for (int collum = 0; collum < 8; collum++) {
-                    SDL_Rect r = {collum * size, (7 - row) * size, size, size};
-                    if (counter % 2 == 0) SDL_SetRenderDrawColor(renderer, 247, 235, 190, 0xFF);
-                    else SDL_SetRenderDrawColor(renderer, 171, 125, 79, 0xFF);
+                for (int collum = 0; collum < boardSize; collum++) {
+                    SDL_Rect r = {collum * size, ((boardSize-1) - row) * size, size, size};
+                    if (row == boardSize-1 || collum == boardSize-1){
+                        SDL_SetRenderDrawColor(renderer, (Uint8) (clear_color.x * 255), (Uint8) (clear_color.y * 255),
+                                              (Uint8) (clear_color.z * 255), (Uint8) (clear_color.w * 255));
+                    } else {
+                        if (counter % 2 == 0) SDL_SetRenderDrawColor(renderer, 247, 235, 190, 0xFF);
+                        else SDL_SetRenderDrawColor(renderer, 171, 125, 79, 0xFF);
+                    }
                     SDL_RenderFillRect(renderer, &r);
 
-                    char squareOut;
                     Square square = {collum, row};
+                    SDL_Texture* defaultTexture = nullptr;
+                    if (row == boardSize-1){
+                        switch (collum){
+                            case 0: defaultTexture = aTxt;
+                                break;
+                            case 1: defaultTexture = bTxt;
+                                break;
+                            case 2: defaultTexture = cTxt;
+                                break;
+                            case 3: defaultTexture = dTxt;
+                                break;
+                            case 4: defaultTexture = eTxt;
+                                break;
+                            case 5: defaultTexture = fTxt;
+                                break;
+                            case 6: defaultTexture = gTxt;
+                                break;
+                            case 7: defaultTexture = hTxt;
+                        }
+                    }
+                    if (collum == boardSize-1){
+                        switch (row){
+                            case 0: defaultTexture = oneTxt;
+                                break;
+                            case 1: defaultTexture = twoTxt;
+                                break;
+                            case 2: defaultTexture = threeTxt;
+                                break;
+                            case 3: defaultTexture = fourTxt;
+                                break;
+                            case 4: defaultTexture = fiveTxt;
+                                break;
+                            case 5: defaultTexture = sixTxt;
+                                break;
+                            case 6: defaultTexture = sevenTxt;
+                                break;
+                            case 7: defaultTexture = eightTxt;
+                        }
+                    }
 
                     switch (game.getPieceType(square)) {
                         case PieceType::PAWN:
@@ -286,7 +371,7 @@ int main(int argc, char* argv[]) {
                             else SDL_RenderCopy(renderer, blackQueenTxt, NULL, &r);
                             break;
                         default:
-                            SDL_RenderCopy(renderer, NULL, NULL, &r);
+                            SDL_RenderCopy(renderer, defaultTexture, NULL, &r);
                     }
 
                     //if (row < 4)
@@ -296,8 +381,8 @@ int main(int argc, char* argv[]) {
 
                     counter++;
                 }
-                counter++;
             }
+
             if (newInput) {
                 winner = game.getWinner();
                 newInput = false;
@@ -308,6 +393,7 @@ int main(int argc, char* argv[]) {
             game = Game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
             resetBoard = false;
             invalidMove = false;
+            gameLog << std::endl << std::endl;
         }
 
             SDL_RenderPresent(renderer);
@@ -319,6 +405,7 @@ int main(int argc, char* argv[]) {
     ImGui_ImplSDLRenderer_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
+    gameLog.close();
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
