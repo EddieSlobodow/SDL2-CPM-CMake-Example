@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) {
     ofstream gameLog("C:\\repos\\SDL2-CPM-CMake-Example\\gamelog.txt");
     if (!gameLog.is_open()) std::cerr << "Error opening the file" << std::endl;
 
-    Game game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
+    Game* game = new Game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
     Teams winner = Teams::NONE;
     //Game game(FEN("k7/8/1K6/2Q5/8/8/8/8"));
 
@@ -272,24 +272,23 @@ int main(int argc, char* argv[]) {
 
             int height, width;
             SDL_GetWindowSize(window, &width, &height);
-
-            int size = height / 9;
+            int boardSize = 9;
+            int size = height / boardSize;
             int counter = 0;
 
             if (newInput) {
-                if (game.AttemptMoves(interpretMove(game.getTeamPieces(tomove), discoverMove(notation), tomove),
+                if (game->AttemptMoves(interpretMove(game->getTeamPieces(tomove), discoverMove(notation), tomove),
                                       tomove)) {
                     if (tomove == Teams::WHITE) tomove = Teams::BLACK;
                     else tomove = Teams::WHITE;
                     invalidMove = false;
                     gameLog << notation << "  ";
                     rowCounter++;
-                    if (rowCounter % 8 == 0) gameLog << endl;
+                    if (rowCounter % boardSize-1 == 0) gameLog << endl;
                 } else {
                     invalidMove = true;
                 }
             }
-            int boardSize = 9;
 
             //printboard
             for (int row = 0; row < boardSize; row++) {
@@ -345,29 +344,29 @@ int main(int argc, char* argv[]) {
                         }
                     }
 
-                    switch (game.getPieceType(square)) {
+                    switch (game->getPieceType(square)) {
                         case PieceType::PAWN:
-                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+                            if (game->getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
                             else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
                             break;
                         case PieceType::ROOK:
-                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteRookTxt, NULL, &r);
+                            if (game->getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteRookTxt, NULL, &r);
                             else SDL_RenderCopy(renderer, blackRookTxt, NULL, &r);
                             break;
                         case PieceType::KNIGHT:
-                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKnightTxt, NULL, &r);
+                            if (game->getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKnightTxt, NULL, &r);
                             else SDL_RenderCopy(renderer, blackKnightTxt, NULL, &r);
                             break;
                         case PieceType::BISHOP:
-                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteBishopTxt, NULL, &r);
+                            if (game->getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteBishopTxt, NULL, &r);
                             else SDL_RenderCopy(renderer, blackBishopTxt, NULL, &r);
                             break;
                         case PieceType::KING:
-                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKingTxt, NULL, &r);
+                            if (game->getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKingTxt, NULL, &r);
                             else SDL_RenderCopy(renderer, blackKingTxt, NULL, &r);
                             break;
                         case PieceType::QUEEN:
-                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteQueenTxt, NULL, &r);
+                            if (game->getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteQueenTxt, NULL, &r);
                             else SDL_RenderCopy(renderer, blackQueenTxt, NULL, &r);
                             break;
                         default:
@@ -384,13 +383,14 @@ int main(int argc, char* argv[]) {
             }
 
             if (newInput) {
-                winner = game.getWinner();
+                winner = game->getWinner();
                 newInput = false;
             }
         if (resetBoard){
             tomove = Teams::WHITE;
             winner = Teams::NONE;
-            game = Game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
+            delete game;
+            game = new Game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
             resetBoard = false;
             invalidMove = false;
             gameLog << std::endl << std::endl;

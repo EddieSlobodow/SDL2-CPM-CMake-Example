@@ -28,7 +28,8 @@ add_executable(demo main.cpp
         Chess.h
         ChessCLI.h
         Move.h
-        Piece.h)
+        Piece.h
+        Chess.cpp)
 add_executable(demo2 main2.cpp)
 
 find_package(OpenGL REQUIRED)

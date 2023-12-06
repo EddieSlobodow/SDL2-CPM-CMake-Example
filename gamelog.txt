@@ -1,1 +1,5 @@
-e4  d5  exd5  agre  
+e4  
+e5  d4  
+
+e4  e5  d3  
+
