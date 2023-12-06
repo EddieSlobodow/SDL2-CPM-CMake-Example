@@ -144,9 +144,12 @@ int main(int argc, char* argv[]) {
 
     std::string notation;
     bool newInput = false;
+    bool invalidMove = false;
+    bool resetBoard = false;
 
     Game game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
-    //Game game(FEN("r2qk2r/8/8/8/8/8/8/R2QK2R"));
+    Teams winner = Teams::NONE;
+    //Game game(FEN("k7/8/1K6/2Q5/8/8/8/8"));
 
     Teams tomove = Teams::WHITE;
 
@@ -160,139 +163,156 @@ int main(int argc, char* argv[]) {
         // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         SDL_Event event;
 
-        while (SDL_PollEvent(&event))
-        {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT)
-                done = true;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-                done = true;
-        }
-
-        // Start the Dear ImGui frame
-        ImGui_ImplSDLRenderer_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
-
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-        {
-            static float f = 0.0f;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-            static char textBuffer[256] = "Hello, ImGui!";
-            bool enterPressed = ImGui::InputText("Enter Text", textBuffer, sizeof(textBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
-
-            if (enterPressed) {
-                // Do something when Enter is pressed
-                printf("Enter pressed! Text: %s\n", textBuffer);
-                notation = textBuffer;
-                newInput = true;
-                textBuffer[0] = '\0';
-                // Here, you can store the textBuffer in a variable or perform any other actions.
+            while (SDL_PollEvent(&event)) {
+                ImGui_ImplSDL2_ProcessEvent(&event);
+                if (event.type == SDL_QUIT)
+                    done = true;
+                if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
+                    event.window.windowID == SDL_GetWindowID(window))
+                    done = true;
             }
 
-            if (tomove == Teams::WHITE) ImGui::Text("White to move");
-            else ImGui::Text("Black to move");  // Display some text (you can use a format strings too)
+            // Start the Dear ImGui frame
+            ImGui_ImplSDLRenderer_NewFrame();
+            ImGui_ImplSDL2_NewFrame();
+            ImGui::NewFrame();
 
+            // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+            //if (show_demo_window)
+            //ImGui::ShowDemoWindow(&show_demo_window);
 
-            //ImGui::SameLine();
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
-
-
-        // Rendering
-        ImGui::Render();
-
-        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
-        SDL_RenderClear(renderer);
-
-        // todo: add your game logic here to be drawn before the ui rendering
-
-        // present ui on top of your drawings
-        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
-
-        int height, width;
-        SDL_GetWindowSize(window,  &width, &height);
-
-        int size = height/8;
-        int counter = 0;
-        if (newInput){
-            if (game.AttemptMoves(interpretMove(game.getTeamPieces(tomove), discoverMove(notation), tomove), tomove))
+            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
             {
-                if (tomove == Teams::WHITE) tomove = Teams::BLACK;
-                else tomove = Teams::WHITE;
-            }
-            newInput = false;
-        }
-        int boardSize = 8;
-        for(int row = 0; row < boardSize; row++){
-            for (int collum = 0; collum < 8; collum++){
-                SDL_Rect r = {collum*size,(7-row)*size,size,size};
-                if (counter % 2 == 0) SDL_SetRenderDrawColor(renderer, 247, 235, 190, 0xFF);
-                else SDL_SetRenderDrawColor(renderer, 171, 125, 79, 0xFF);
-                SDL_RenderFillRect(renderer, &r);
+                static float f = 0.0f;
 
-                char squareOut;
-                Square square = {collum, row};
+                ImGui::Begin(
+                        "Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+                static char textBuffer[256] = "";
+                bool enterPressed = ImGui::InputText("Enter a move", textBuffer, sizeof(textBuffer),
+                                                     ImGuiInputTextFlags_EnterReturnsTrue);
 
-                switch (game.getPieceType(square)) {
-                    case PieceType::PAWN:
-                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
-                        else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
-                        break;
-                    case PieceType::ROOK:
-                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteRookTxt, NULL, &r);
-                        else SDL_RenderCopy(renderer, blackRookTxt, NULL, &r);
-                        break;
-                    case PieceType::KNIGHT:
-                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKnightTxt, NULL, &r);
-                        else SDL_RenderCopy(renderer, blackKnightTxt, NULL, &r);
-                        break;
-                    case PieceType::BISHOP:
-                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteBishopTxt, NULL, &r);
-                        else SDL_RenderCopy(renderer, blackBishopTxt, NULL, &r);
-                        break;
-                    case PieceType::KING:
-                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKingTxt, NULL, &r);
-                        else SDL_RenderCopy(renderer, blackKingTxt, NULL, &r);
-                        break;
-                    case PieceType::QUEEN:
-                        if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteQueenTxt, NULL, &r);
-                        else SDL_RenderCopy(renderer, blackQueenTxt, NULL, &r);
-                        break;
-                    default: SDL_RenderCopy(renderer, NULL, NULL, &r);
+                if (enterPressed) {
+                    // Do something when Enter is pressed
+                    printf("Enter pressed! Text: %s\n", textBuffer);
+                    notation = textBuffer;
+                    newInput = true;
+                    textBuffer[0] = '\0';
+                    // Here, you can store the textBuffer in a variable or perform any other actions.
                 }
 
-                //if (row < 4)
-                //SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
-                //else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
+                if (tomove == Teams::WHITE) ImGui::Text("White to move");
+                else ImGui::Text("Black to move");  // Display some text (you can use a format strings too)
+
+                if (winner == Teams::BLACK) ImGui::Text("Black Wins!");
+                if (winner == Teams::WHITE) ImGui::Text("White Wins!");
+
+                if (invalidMove) ImGui::Text("Invalid Move!");
+                if (ImGui::Button("Reset Game")) resetBoard = true;
+                //ImGui::SameLine();
+
+                ImGui::End();
+            }
+
+            // 3. Show another simple window.
+            if (show_another_window) {
+                ImGui::Begin("Another Window",
+                             &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+                ImGui::Text("Hello from another window!");
+                if (ImGui::Button("Close Me"))
+                    show_another_window = false;
+                ImGui::End();
+            }
 
 
+            // Rendering
+            ImGui::Render();
+
+            SDL_SetRenderDrawColor(renderer, (Uint8) (clear_color.x * 255), (Uint8) (clear_color.y * 255),
+                                   (Uint8) (clear_color.z * 255), (Uint8) (clear_color.w * 255));
+            SDL_RenderClear(renderer);
+
+            // todo: add your game logic here to be drawn before the ui rendering
+
+            // present ui on top of your drawings
+            ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+
+            int height, width;
+            SDL_GetWindowSize(window, &width, &height);
+
+            int size = height / 8;
+            int counter = 0;
+            if (newInput) {
+                if (game.AttemptMoves(interpretMove(game.getTeamPieces(tomove), discoverMove(notation), tomove),
+                                      tomove)) {
+                    if (tomove == Teams::WHITE) tomove = Teams::BLACK;
+                    else tomove = Teams::WHITE;
+                    invalidMove = false;
+                } else invalidMove = true;
+            }
+            int boardSize = 8;
+            for (int row = 0; row < boardSize; row++) {
+                for (int collum = 0; collum < 8; collum++) {
+                    SDL_Rect r = {collum * size, (7 - row) * size, size, size};
+                    if (counter % 2 == 0) SDL_SetRenderDrawColor(renderer, 247, 235, 190, 0xFF);
+                    else SDL_SetRenderDrawColor(renderer, 171, 125, 79, 0xFF);
+                    SDL_RenderFillRect(renderer, &r);
+
+                    char squareOut;
+                    Square square = {collum, row};
+
+                    switch (game.getPieceType(square)) {
+                        case PieceType::PAWN:
+                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+                            else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
+                            break;
+                        case PieceType::ROOK:
+                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteRookTxt, NULL, &r);
+                            else SDL_RenderCopy(renderer, blackRookTxt, NULL, &r);
+                            break;
+                        case PieceType::KNIGHT:
+                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKnightTxt, NULL, &r);
+                            else SDL_RenderCopy(renderer, blackKnightTxt, NULL, &r);
+                            break;
+                        case PieceType::BISHOP:
+                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteBishopTxt, NULL, &r);
+                            else SDL_RenderCopy(renderer, blackBishopTxt, NULL, &r);
+                            break;
+                        case PieceType::KING:
+                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteKingTxt, NULL, &r);
+                            else SDL_RenderCopy(renderer, blackKingTxt, NULL, &r);
+                            break;
+                        case PieceType::QUEEN:
+                            if (game.getPieceTeam(square) == 0) SDL_RenderCopy(renderer, whiteQueenTxt, NULL, &r);
+                            else SDL_RenderCopy(renderer, blackQueenTxt, NULL, &r);
+                            break;
+                        default:
+                            SDL_RenderCopy(renderer, NULL, NULL, &r);
+                    }
+
+                    //if (row < 4)
+                    //SDL_RenderCopy(renderer, whitePawnTxt, NULL, &r);
+                    //else SDL_RenderCopy(renderer, blackPawnTxt, NULL, &r);
+
+
+                    counter++;
+                }
                 counter++;
             }
-            counter++;
+            if (newInput) {
+                winner = game.getWinner();
+                newInput = false;
+            }
+        if (resetBoard){
+            tomove = Teams::WHITE;
+            winner = Teams::NONE;
+            game = Game(FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"));
+            resetBoard = false;
+            invalidMove = false;
         }
 
+            SDL_RenderPresent(renderer);
 
-        SDL_RenderPresent(renderer);
-
-        SDL_Delay(0);
+            SDL_Delay(0);
     }
 
     // Cleanup

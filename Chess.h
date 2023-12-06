@@ -182,28 +182,31 @@ public:
     }
 
     Teams getWinner() {
-
+        std::cout << "1 ";
         Teams tomove = lastMove.color;
         Teams color;
         for (int i = 0; i < teams.size(); i++)
             if (i != tomove)
                 color = static_cast<Teams>(i);
-
+        std::cout << "2 ";
         // check checkmate
         if (!hasMoves(color)) {
-            if (!isChecked(color))
+            std::cout << "3 ";
+            if (!isChecked(color)) {
+                std::cout << "4 ";
                 return Teams::ALL;
+            }
             return tomove;
         }
-        
+        std::cout << "5 ";
         // check fifty move rule
         if (lastReversableMove == 50)
             return Teams::ALL;
-
+        std::cout << "6 ";
         // check threefold repitition
         if (std::count(positionHistory.begin(), positionHistory.end(), positionHistory.back()) >= 3)
             return Teams::ALL;
-
+        std::cout << "7 ";
         return Teams::NONE;
     }
 
